@@ -18,6 +18,13 @@ export ESPIDF_HASH=9e70825d1e1cbf7988cf36981774300066580ea7
 
 FIRMWARES=/mnt/c/develop/MyPython/FIRMWARE
 
+#Add some defaults 
+if [ -z $2 ]; then
+    BOARD=JOSV_SPIRAM
+else
+    BOARD=$2
+fi
+
 # Add to path 
 # pathadd path/to/add [after]
 pathadd() {
@@ -53,15 +60,12 @@ function do_build() {
     #prepend to path 
     pathadd $ESPTOOLS
     
-    # if [ -z ${IDF_TOOLS_INSTALL_CMD+x} ]; then echo "var is unset";  else   echo "var is set to '$IDF_TOOLS_INSTALL_CMD'";  fi
-    # dotsource the ESPDIF environment
+    # dotsource the ESPDIF environment if not yet imported
     if [ -z ${IDF_TOOLS_INSTALL_CMD+x} ]; then 
         source $ESPIDF/export.sh
     fi
 
-
-
-    make submodules n=4
+    make submodules j=4
     
     if make BOARD=$BOARD j=4;
     then 
@@ -149,7 +153,8 @@ case "$1" in
         cd ports/esp32
 
         # do_build "mpy_jos_esp32_spiram" GENERIC_SPIRAM $FIRMWARES
-        do_build "mpy_josv_esp32_spiram" JOSV_SPIRAM $FIRMWARES
+        # do_build "mpy_josv_esp32_spiram" JOSV_SPIRAM $FIRMWARES
+        do_build "mpy_esp32_${BOARD,,}" $BOARD $FIRMWARES
         ;;
     # 6)
     #     echo -e  "${CYAN}5. flash ESP32${NC}"
