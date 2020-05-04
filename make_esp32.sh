@@ -10,10 +10,11 @@ echo -e  "${CYAN}ESP build process${NC}"
 #Locations 
 ESP_DIR=$HOME/esp32
 
-export MPY_DIR=/mnt/c/develop/MyPython/micropython
-export ESPIDF=$ESP_DIR/idf                      # Or any path you like.
-export ESPTOOLS=$ESP_DIR/xtensa-esp32-elf/bin     # xtensa toolchain
+export MPY_DIR=/mnt/c/develop/MyPython/micropython      # micropython repo
+export ESPIDF=$ESP_DIR/idf                              # xtensa SDK
+export ESPTOOLS=$ESP_DIR/xtensa-esp32-elf/bin           # xtensa toolchain
 
+#v3 SDK 
 export ESPIDF_HASH=9e70825d1e1cbf7988cf36981774300066580ea7
 
 FIRMWARES=/mnt/c/develop/MyPython/FIRMWARE
@@ -65,7 +66,7 @@ function do_build() {
         source $ESPIDF/export.sh
     fi
 
-    make submodules j=4
+    make submodules --jobs=4
     
     if make BOARD=$BOARD j=4;
     then 
@@ -154,7 +155,7 @@ case "$1" in
 
         # do_build "mpy_jos_esp32_spiram" GENERIC_SPIRAM $FIRMWARES
         # do_build "mpy_josv_esp32_spiram" JOSV_SPIRAM $FIRMWARES
-        do_build "mpy_esp32_${BOARD,,}" $BOARD $FIRMWARES
+        do_build "mpy_esp32_${BOARD,,}" $BOARD $FIRMWARES 
         ;;
     # 6)
     #     echo -e  "${CYAN}5. flash ESP32${NC}"
