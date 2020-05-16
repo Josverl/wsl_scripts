@@ -44,9 +44,9 @@ pathadd() {
 # arg2 - board as defined in esp\board\xxxx
 
 function do_build() {
-    DESCR=$1
-    BOARD=$2
-    DEST=$3
+    BOARD=$1
+    DEST=$2
+    DESCR=$3
     shift
     shift
     shift
@@ -61,16 +61,16 @@ function do_build() {
     #prepend to path 
     pathadd $ESPTOOLS
     
-    # dotsource the ESPDIF environment if not yet imported
+    # dotsource the ESPIDF environment if not yet imported
     if [ -z ${IDF_TOOLS_INSTALL_CMD+x} ]; then 
         source $ESPIDF/export.sh
     fi
-
+    make clean BOARD=$BOARD
     make submodules --jobs=4
     
-    if make BOARD=$BOARD j=4;
+    if make BOARD=$BOARD USER_C_MODULES=../../ulab all --jobs=4;
     then 
-        echo -e  "${GREEN}- Build Completed{NC}"
+        echo -e  "${GREEN}- Build Completed.${NC}"
         cp ./build-$BOARD/firmware.bin $FIRMWARES/${DESCR,,}.bin --verbose
     else
         echo -e  "${RED}Error during Build${NC}"
@@ -129,7 +129,7 @@ case "$1" in
             source build-venv/bin/activate
         fi
         ;;
-    4)  
+    4|"download")  
         echo -e  "${CYAN}4. Download ESPIDF toolchain ${NC}"
         echo -e  "${CYAN} [sudo] Install PreReqs to $ESP_DIR ${NC}"
         # Ubuntu and Debian
@@ -153,9 +153,9 @@ case "$1" in
         cd $MPY_DIR
         cd ports/esp32
 
-        # do_build "mpy_jos_esp32_spiram" GENERIC_SPIRAM $FIRMWARES
-        # do_build "mpy_josv_esp32_spiram" JOSV_SPIRAM $FIRMWARES
-        do_build "mpy_esp32_${BOARD,,}" $BOARD $FIRMWARES 
+        # do_build  GENERIC_SPIRAM $FIRMWARES "mpy_jos_esp32_spiram"
+        # do_build  JOSV_SPIRAM $FIRMWARES "mpy_josv_esp32_spiram"
+        do_build $BOARD $FIRMWARES "mpy_esp32_${BOARD,,}"
         ;;
     # 6)
     #     echo -e  "${CYAN}5. flash ESP32${NC}"
@@ -191,11 +191,12 @@ case "$1" in
 
 
     *) 
-        echo -e  "${CYAN}1. Setup ESP32 toolchain.\n"
+        echo -e  "${CYAN}1. Setup ESP32 toolchain."
         echo -e  "${CYAN}2. Fetch the required ESP IDF form git using the hash."
         echo -e  "${CYAN}3. Set up a Python virtual environment from scratch ${NC}"
         echo -e  "${CYAN}4. Download ESPDIF toolchain ${NC}"
         echo -e  "${CYAN}5. Make ESP32${NC}"
+        echo -e  "${CYAN}9. Make native .mpy module{NC}"
 esac
 
 echo -e  "${GREEN}done...${NC}"
