@@ -14,8 +14,11 @@ export MPY_DIR=/mnt/c/develop/MyPython/micropython      # micropython repo
 export ESPIDF=$ESP_DIR/idf                              # xtensa SDK
 export ESPTOOLS=$ESP_DIR/xtensa-esp32-elf/bin           # xtensa toolchain
 
-#v3 SDK 
-export ESPIDF_HASH=9e70825d1e1cbf7988cf36981774300066580ea7
+# TODO: This May/will need updating over time 
+ESPIDF_SUPHASH_V3=9e70825d1e1cbf7988cf36981774300066580ea7
+ESPIDF_SUPHASH_V4=463a9d8b7f9af8205222b80707f9bdbba7c530e1
+
+export ESPIDF_HASH=$ESPIDF_SUPHASH_V4
 
 FIRMWARES=/mnt/c/develop/MyPython/FIRMWARE
 
@@ -155,7 +158,7 @@ case "$1" in
 
         # do_build  GENERIC_SPIRAM $FIRMWARES "mpy_jos_esp32_spiram"
         # do_build  JOSV_SPIRAM $FIRMWARES "mpy_josv_esp32_spiram"
-        do_build $BOARD $FIRMWARES "mpy_esp32_${BOARD,,}"
+        do_build $BOARD $FIRMWARES "custom/mpy_esp32_${BOARD,,}"
         ;;
     # 6)
     #     echo -e  "${CYAN}5. flash ESP32${NC}"
