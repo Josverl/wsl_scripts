@@ -14,9 +14,9 @@ export MPY_DIR=/mnt/c/develop/MyPython/micropython      # micropython repo
 export ESPIDF=$ESP_DIR/idf                              # xtensa SDK
 export ESPTOOLS=$ESP_DIR/xtensa-esp32-elf/bin           # xtensa toolchain
 
-# TODO: This May/will need updating over time 
+# TODO: This will need updating over time 
 ESPIDF_SUPHASH_V3=9e70825d1e1cbf7988cf36981774300066580ea7
-ESPIDF_SUPHASH_V4=463a9d8b7f9af8205222b80707f9bdbba7c530e1
+ESPIDF_SUPHASH_V4=4c81978a3e2220674a432a588292a4c860eef27b
 
 export ESPIDF_HASH=$ESPIDF_SUPHASH_V4
 
@@ -24,7 +24,8 @@ FIRMWARES=/mnt/c/develop/MyPython/FIRMWARE
 
 #Add some defaults 
 if [ -z $2 ]; then
-    BOARD=JOSV_SPIRAM
+    # BOARD=JOSV_SPIRAM
+    BOARD=GENERIC_SPIRAM
 else
     BOARD=$2
 fi
@@ -45,6 +46,17 @@ pathadd() {
 # do a build of a port 
 # arg1 - description
 # arg2 - board as defined in esp\board\xxxx
+
+function prepare(){
+    cd $MPY_DIR/ports/esp32
+    #prepend to path 
+    pathadd $ESPTOOLS
+    export PATH
+    # dotsource the ESPIDF environment if not yet imported
+    if [ -z ${IDF_TOOLS_INSTALL_CMD+x} ]; then 
+        source $ESPIDF/export.sh
+    fi
+}
 
 function do_build() {
     BOARD=$1
@@ -69,9 +81,10 @@ function do_build() {
         source $ESPIDF/export.sh
     fi
     make clean BOARD=$BOARD
-    make submodules --jobs=4
+    make submodules --jobs=$(nproc)
     
-    if make BOARD=$BOARD USER_C_MODULES=../../ulab all --jobs=4;
+    #if make BOARD=$BOARD USER_C_MODULES=../../c-modules CFLAGS_EXTRA=-DMODULE_ULAB_ENABLED=1 all --jobs=$(nproc);
+    if make BOARD=$BOARD USER_C_MODULES=../../c_modules all --jobs=$(nproc);
     then 
         echo -e  "${GREEN}- Build Completed.${NC}"
         cp ./build-$BOARD/firmware.bin $FIRMWARES/${DESCR,,}.bin --verbose
@@ -86,6 +99,12 @@ function do_build() {
 
 
 case "$1" in 
+    0|"prep"|"prepare")
+        echo -e  "${CYAN} 0. Prepare the environment to build for esp32.${NC}"
+        echo -e  "${CYAN}    use '. make_esp32 prep' to make this permanent${NC}"
+        prepare
+        ;;
+
     1|"hash")
         echo -e  "${CYAN}1. Setup ESP32 toolchain.\n"
         echo -e  "${CYAN}    This will print the supported hashes, copy the one you want.${NC}"
@@ -127,6 +146,11 @@ case "$1" in
 
             #elftools needed for native dynamic modules
             pip3 install numpy elftools pyelftools
+
+            # ESP IDF4 ?
+            cd ~/esp32/idf/
+            ./install.sh
+            
         else
             echo -e  "${GREEN} use existing 'build-venv' virtual environment ${NC}"
             source build-venv/bin/activate
@@ -194,12 +218,13 @@ case "$1" in
 
 
     *) 
-        echo -e  "${CYAN}1. Setup ESP32 toolchain."
-        echo -e  "${CYAN}2. Fetch the required ESP IDF form git using the hash."
-        echo -e  "${CYAN}3. Set up a Python virtual environment from scratch ${NC}"
-        echo -e  "${CYAN}4. Download ESPDIF toolchain ${NC}"
+        echo -e  "${CYAN}0. Prepare${NC} the environment to build for esp32."
+        echo -e  "${CYAN}1. Setup${NC} ESP32 toolchain."
+        echo -e  "${CYAN}2. Fetch${NC} the required ESP IDF form git using the hash."
+        echo -e  "${CYAN}3. ${NC}Set up a {$CYAN}Python virtual environment${NC} from scratch ${NC}"
+        echo -e  "${CYAN}4. Download${NC} ESPDIF toolchain ${NC}"
         echo -e  "${CYAN}5. Make ESP32${NC}"
-        echo -e  "${CYAN}9. Make native .mpy module{NC}"
+        echo -e  "${CYAN}9. Make native {$CYAN}.mpy${NC} module ${NC}"
 esac
 
 echo -e  "${GREEN}done...${NC}"
